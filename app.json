@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Bike-Rental-App",
+    "slug": "Bike-Rental-App",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
