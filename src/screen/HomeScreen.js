@@ -2,13 +2,35 @@ import { StyleSheet, Text, View, Button, Image, FlatList, TouchableOpacity, Scro
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import React from 'react'
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+import { AuthContext } from '../components/context'
+
 import walletIcon from '../assets/images/wallet.png'
 import topUpIcon from '../assets/images/top-up.png'
 import userIcon from '../assets/images/programmer.png'
 import mapIcon from '../assets/images/map.png'
 import noResultIcon from '../assets/images/no-results.png'
 
+const API_URL = 'https://localhost:4000'
+
 const HomeScreen = ({ navigation }) => {
+    React.useEffect(async () => {
+        const token = await AsyncStorage.getItem('token')
+        axios.post(API_URL, {
+            //data
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+        })
+    })
+
+    const { signOut } = React.useContext(AuthContext)
+
     const [sideBar, setSideBar] = React.useState(false);
     React.useLayoutEffect(() => {
         navigation.setOptions({
@@ -84,16 +106,16 @@ const HomeScreen = ({ navigation }) => {
             {
                 sideBar && <View style={styles.sideBarStyle}>
                     <View style={styles.sideBarContent}>
-                        <View style={{marginTop: 20}}>
-                            <Text style={{fontSize: 20, fontWeight: "bold", marginBottom: "5%"}}>Bike Rental App</Text>
+                        <View style={{ marginTop: 20 }}>
+                            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: "5%" }}>Bike Rental App</Text>
                             <Text>Develop by Hồ Ngọc Đông Sinh</Text>
                             <Text>Copy right 2022</Text>
                         </View>
-                        <TouchableOpacity style={styles.buttonLogout}>
-                            <Text style={{fontSize: 17}}>Log out</Text>
+                        <TouchableOpacity style={styles.buttonLogout} onPress={signOut}>
+                            <Text style={{ fontSize: 17 }}>Log out</Text>
                         </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.sideBarOpacity} onPress={() => setSideBar(false)}/>
+                    <TouchableOpacity style={styles.sideBarOpacity} onPress={() => setSideBar(false)} />
                 </View>
             }
             <View style={styles.wallet}>
@@ -133,7 +155,7 @@ const HomeScreen = ({ navigation }) => {
                         </ScrollView>
                         :
                         <View style={styles.noneData}>
-                            <Text style={styles.noneDataText}  onPress={() => navigation.navigate("Payment")}>Không có dữ liệu</Text>
+                            <Text style={styles.noneDataText} onPress={() => navigation.navigate("Payment")}>Không có dữ liệu</Text>
                             <Image style={styles.noneDataImage} source={noResultIcon} />
                         </View>
                 }

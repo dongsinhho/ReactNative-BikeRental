@@ -1,6 +1,9 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import React from 'react'
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
 const PaymentScreen = ({ navigation, route }) => {
   const { station, isRent } = route.params
   React.useLayoutEffect(() => {

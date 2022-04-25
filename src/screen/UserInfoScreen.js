@@ -1,6 +1,9 @@
 import { StyleSheet, Text, View, TouchableOpacity, Image, TextInput, Button } from 'react-native'
 import React from 'react'
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
 const UserInfoScreen = ({ navigation }) => {
     const [modified, setModified] = React.useState(false)
     const [buttonName, setButtonName] = React.useState("Chỉnh sửa")
