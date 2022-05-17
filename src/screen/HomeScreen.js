@@ -13,25 +13,31 @@ import userIcon from '../assets/images/programmer.png'
 import mapIcon from '../assets/images/map.png'
 import noResultIcon from '../assets/images/no-results.png'
 
-const API_URL = 'https://localhost:4000'
+import GlobalVariable from '../GlobalVariable';
 
 const HomeScreen = ({ navigation }) => {
-    React.useEffect(async () => {
-        const token = await AsyncStorage.getItem('token')
-        axios.post(API_URL, {
-            //data
-        }, {
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-        })
-    })
-
     const { signOut } = React.useContext(AuthContext)
-
     const [sideBar, setSideBar] = React.useState(false);
+    const [historyData, setHistoryData] = React.useState([])
+    React.useEffect(async () => {
+        try {
+            const token = await AsyncStorage.getItem('token')
+            const res = await axios.get(`${GlobalVariable.WEB_SERVER_URL}/api/payments/info`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+            })
+            if (res.data) {
+                setHistoryData(res.data ? res.data : [])
+            }
+        }
+        catch (err) {
+            setHistoryData([])
+        }
+    }, [])
+
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
@@ -46,55 +52,10 @@ const HomeScreen = ({ navigation }) => {
                 borderBottomWidth: 0
             },
         });
-    }, [navigation, sideBar])
-
-    const historyData = [
-        // {
-        //     id: "áidjạđâsd",
-        //     createdAt: "1874012142",
-        //     updatedAt: "1387012312",
-        //     takeAt: "tramso1",
-        //     paidAt: "tramso4"
-        // },
-        // {
-        //     id: "áidjạđâsd1",
-        //     createdAt: "1874012142",
-        //     updatedAt: "1387012312",
-        //     takeAt: "tramso1",
-        //     paidAt: "tramso4"
-        // },
-        // {
-        //     id: "áidjạđâsd2",
-        //     createdAt: "1874012142",
-        //     updatedAt: "1387012312",
-        //     takeAt: "tramso1",
-        //     paidAt: "tramso4"
-        // },
-        // {
-        //     id: "áidjạđâsd3",
-        //     createdAt: "1874012142",
-        //     updatedAt: "1387012312",
-        //     takeAt: "tramso1",
-        //     paidAt: "tramso4"
-        // },
-        // {
-        //     id: "áidjạđâsd3",
-        //     createdAt: "1874012142",
-        //     updatedAt: "1387012312",
-        //     takeAt: "tramso1",
-        //     paidAt: "tramso4"
-        // },
-        // {
-        //     id: "áidjạđâsd3",
-        //     createdAt: "1874012142",
-        //     updatedAt: "1387012312",
-        //     takeAt: "tramso1",
-        //     paidAt: "tramso4"
-        // },
-    ]
+    }, [navigation])
 
     const renderItem = ({ item, index }) => (
-        <View style={styles.historyList}>
+        <View style={styles.historyList} key={index.toString()}>
             <Text >
                 Lần {index + 1}: thuê lúc: {item.createdAt} tại {item.takeAt}, trả lúc: {item.updatedAt} tại {item.paidAt}
             </Text>
@@ -111,7 +72,7 @@ const HomeScreen = ({ navigation }) => {
                             <Text>Develop by Hồ Ngọc Đông Sinh</Text>
                             <Text>Copy right 2022</Text>
                         </View>
-                        <TouchableOpacity style={styles.buttonLogout} onPress={signOut}>
+                        <TouchableOpacity style={styles.buttonLogout} onPress={() => { setSideBar(false); signOut() }}>
                             <Text style={{ fontSize: 17 }}>Log out</Text>
                         </TouchableOpacity>
                     </View>
@@ -146,13 +107,11 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={styles.historyTitle}>Lịch sử di chuyển</Text>
                 {
                     historyData.length ?
-                        <ScrollView>
-                            <FlatList
-                                data={historyData}
-                                renderItem={renderItem}
-                                keyExtractor={(item) => item.id}
-                            />
-                        </ScrollView>
+                        <FlatList
+                            data={historyData}
+                            renderItem={renderItem}
+                            keyExtractor={(item) => { return item._id}}
+                        />
                         :
                         <View style={styles.noneData}>
                             <Text style={styles.noneDataText} onPress={() => navigation.navigate("Payment")}>Không có dữ liệu</Text>

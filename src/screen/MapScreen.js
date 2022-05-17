@@ -8,6 +8,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
+import GlobalVariable from '../GlobalVariable';
 import { EvilIcons } from '@expo/vector-icons';
 import stationIcon from '../assets/images/location.png'
 import stationActiveIcon from '../assets/images/activeLocation.png'
@@ -36,63 +37,62 @@ const requestLocationPermission = async () => {
     console.warn(err);
   }
 }
-const station = [
-  {
-    name: "tramso1",
-    latitude: 10.868753894374091,
-    longitude: 106.79707161503906,
-    status: true
-  },
-  {
-    name: "tramso2",
-    latitude: 10.86739469843257,
-    longitude: 106.79453960980189,
-    status: true
-  },
-  {
-    name: "tramso3",
-    latitude: 10.871303687123392,
-    longitude: 106.79623476591759,
-    status: false
-  },
-  {
-    name: "tramso4",
-    latitude: 10.880059214633896,
-    longitude: 106.80625013429093,
-    status: true
-  },
-  {
-    name: "tramso5",
-    latitude: 10.877625393466351,
-    longitude: 106.80165819245303,
-    status: false
-  }
-]
 const MapScreen = ({ navigation }) => {
 
-  React.useLayoutEffect(() => {
+  React.useLayoutEffect(async() => {
     navigation.setOptions({
       headerTitle: "",
       headerTransparent: true,
-    });
+    })
+
+    try {
+      const token = await AsyncStorage.getItem('token')
+      const res = await axios.get(`${GlobalVariable.WEB_SERVER_URL}/api/stations/user/`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        validateStatus: function (status) {
+          return status >= 200 && status < 500;
+        }
+      })
+      if (res.data) {
+        setStation(res.data ? res.data : [])
+        setBottomSheetData(station)
+      } else {
+        setStation([])
+      }
+    }
+    catch (e) {
+      setStation([])
+      Alert.alert("Có lỗi xảy ra", "Không thể lấy thông tin trạm")
+    }
   }, [navigation])
 
+  const [station, setStation] = React.useState([])
   const [bottomSheetData, setBottomSheetData] = React.useState(station)
 
+  // React.useEffect(async () => {
+
+  // }, [])
+
+  console.log(bottomSheetData)
+
   const handleRentBike = () => {
-    bottomSheetData.status ? 
-    navigation.navigate("Payment", { station: bottomSheetData, isRent: true })
-    :
-    Alert.alert(
-      "Notification",
-      "This station is busy",
-      [
-        { text: "OK", onPress: () => console.log("OK Pressed") }
-      ]
-    )
+    bottomSheetData.status ?
+      navigation.navigate("ListBike", { station: bottomSheetData })
+      :
+      Alert.alert(
+        "Notification",
+        "This station is busy",
+        [
+          { text: "OK", onPress: () => console.log("OK Pressed") }
+        ]
+      )
   }
 
-  const renderItem = ({ item }, index) => (
+  const renderItem = ({ item, index }) => (
     <TouchableOpacity key={index} style={styles.ListBottomSheet} onPress={() => { setBottomSheetData(item) }}>
       <Text>
         Trạm {item.name} {"\n"}Trạng thái: {item.status ? "sẵn sàng phục vụ" : "đang bận"}
@@ -115,9 +115,8 @@ const MapScreen = ({ navigation }) => {
       >
         <FlatList
           data={bottomSheetData}
-          key={bottomSheetData.name}
           renderItem={renderItem}
-          keyExtractor={(item, index) => item.key}
+          keyExtractor={(item) => { return item._id }}
         />
       </View>
       :
@@ -171,7 +170,6 @@ const MapScreen = ({ navigation }) => {
     sheetRef.current.snapTo(0)
   }
 
-
   return (
     <View style={styles.container}>
       <BottomSheet
@@ -196,11 +194,11 @@ const MapScreen = ({ navigation }) => {
         }}
         onPress={() => { sheetRef.current.snapTo(1); setBottomSheetData(station) }}
       >
-        {station.map((marker, index) => (
+        {station && station.map((marker, index) => (
           <Marker
             style={styles.iconStation}
             key={index}
-            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+            coordinate={{ latitude: parseFloat(marker.latitude.$numberDecimal), longitude:  parseFloat(marker.longitude.$numberDecimal) }}
             title={marker.name}
             icon={marker.status ? stationActiveIcon : stationIcon}
           >

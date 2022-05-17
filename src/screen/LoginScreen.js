@@ -1,16 +1,17 @@
-import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity, Image } from 'react-native'
+import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity, Image, Alert } from 'react-native'
 import React from 'react'
 import { AuthContext } from '../components/context'
 
 import Warnings from '../assets/images/warning.png'
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({navigation}) => {
   const [emailText, setEmailText] = React.useState('')
   const [passwordText, setPasswordText] = React.useState('')
   const [errorStatus, setErrorStatus] = React.useState('')
   const { signIn } = React.useContext(AuthContext)
 
   const handleLogIn = () => {
+    setErrorStatus('')
     let errorMessage = []
     if (!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(emailText))) {
       errorMessage.push('Email is invalid')
@@ -22,9 +23,7 @@ const LoginScreen = ({ navigation }) => {
       errorMessage.push('Password contains at least 1 digit, 1 lowercase, 1 uppercase')
     }
     if (errorMessage.length === 0) {
-      setErrorStatus(false)
-      const response = signIn(emailText, passwordText)
-      setErrorStatus(response)
+      signIn(emailText.toLocaleLowerCase(), passwordText, setErrorStatus)
     } else {
       setErrorStatus(errorMessage[0])
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,12 +11,14 @@ import RegisterScreen from './src/screen/RegisterScreen';
 import LoginScreen from './src/screen/LoginScreen';
 import UserInfoScreen from './src/screen/UserInfoScreen';
 import SplashScreen from './src/screen/SplashScreen';
+import ListBikeScreen from './src/screen/ListBikeScreen';
+import UsingBikeScreen from './src/screen/UsingBikeScreen';
 import axios from 'axios';
 
 import { AuthContext } from './src/components/context';
+import GlobalVariable from './src/GlobalVariable';
 
 const Stack = createNativeStackNavigator();
-const API_URL = 'https://localhost:4000'
 
 export default function App() {
 
@@ -48,44 +50,47 @@ export default function App() {
           userToken: null,
           isLoading: false,
         };
-      case 'REGISTER':
-        return {
-          ...prevState,
-          userName: action.id,
-          userToken: action.token,
-          isLoading: false,
-        };
     }
   }
 
   const [loginState, dispatch] = React.useReducer(loginReducer, initialLoginState);
 
   const authContext = React.useMemo(() => ({
-    signIn: async (userName, password) => {
-      let userToken
+    signIn: async (email, password, setErrorStatus) => {
+      let userToken, userName
       userToken = null
-      // get info from axios
-      // try {
-      //   const data = await axios.get(API_URL)
-      if (userName == 'user' && password == 'pass') {
-        userToken = 'thisIsSecret'
-        try {
-          await AsyncStorage.setItem('token', userToken)
-        }
-        catch (e) {
-          console.log(e)
+      userName = null
+      try {
+        const res = await axios.post(`${GlobalVariable.WEB_SERVER_URL}/api/users/login`,
+          {
+            email: email,
+            password: password,
+          }, {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          validateStatus: function (status) {
+            return status >= 200 && status <= 400; 
+          },
+        })
+
+        if (res.status == 200) {
+          userToken = res.data.token
+          userName = res.data.name
+        } else {
+          setErrorStatus(res.data.message)
         }
         dispatch({ type: 'LOGIN', id: userName, token: userToken })
+      } catch (err) {
+        Alert.alert("Login fail", err, [{
+          text: "Retry",
+          onPress: () => signIn(email, password, setErrorStatus),
+        }, {
+          text: "Cancel",
+        }
+      ])
       }
-      // else {
-      //   return data.message
-      // }
-      // }
-      // catch (e) {
-      //   console.log(e)
-      // }
-
-
     },
     signOut: async () => {
       try {
@@ -96,19 +101,6 @@ export default function App() {
       }
       dispatch({ type: 'LOGOUT' })
     },
-    signUp: async (userName, password) => {
-      // create user with axios
-      if (userName == 'user' && password == 'pass') {
-        userToken = 'thisIsSecret'
-        try {
-          await AsyncStorage.setItem('token', userToken)
-        }
-        catch (e) {
-          console.log(e)
-        }
-        dispatch({ type: 'REGISTER', id: userName, token: userToken })
-      }
-    }
   }))
 
   React.useEffect(() => {
@@ -130,7 +122,6 @@ export default function App() {
       <SplashScreen />
     )
   }
-  <SplashScreen />
 
   return (
     <AuthContext.Provider value={authContext}>
@@ -140,20 +131,19 @@ export default function App() {
             <Stack.Navigator>
               <Stack.Screen name="Home" component={HomeScreen} />
               <Stack.Screen name="Map" component={MapScreen} />
+              <Stack.Screen name="ListBike" component={ListBikeScreen} />
+              <Stack.Screen name="UsingBike" component={UsingBikeScreen} />
               <Stack.Screen name="Payment" component={PaymentScreen} />
               <Stack.Screen name="Scan QR" component={ScanQrScreen} />
               <Stack.Screen name="Info" component={UserInfoScreen} />
             </Stack.Navigator>
             :
             <Stack.Navigator>
-              <Stack.Screen name="Register" component={RegisterScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
             </Stack.Navigator>
         }
-
       </NavigationContainer>
     </AuthContext.Provider>
   );
 }
-
-

@@ -19,6 +19,7 @@ const UserInfoScreen = ({ navigation }) => {
         });
     }, [])
 
+    
     const handleModified = () => {
         setModified(!modified)
         buttonName == "Chỉnh sửa" ? setButtonName("Cập nhật") : setButtonName("Chỉnh sửa")

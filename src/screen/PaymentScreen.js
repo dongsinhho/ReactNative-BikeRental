@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const PaymentScreen = ({ navigation, route }) => {
-  const { station, isRent } = route.params
+  const { payment } = route.params
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => <View style={styles.headerTitle}>
@@ -20,13 +20,10 @@ const PaymentScreen = ({ navigation, route }) => {
     });
   }, [navigation])
 
-  React.useEffect(() => {
-    if (isRent) {
-      //send post method to rent bike
-    }
-    //send put method to return bike
-  })
- 
+  const submitButton = () => {
+    
+  }
+
   return (
     <View style={styles.container}>
       {/* {
@@ -37,13 +34,13 @@ const PaymentScreen = ({ navigation, route }) => {
         <View style={styles.firstSector}>
           <Text style={styles.textStyle1}>Pick Up</Text>
           <View style={styles.labelText}>
-            <Text style={styles.textStyle2}>{station.name}</Text>
-            <Text style={styles.textStyle2}>29/11/2021 - 07:00 AM</Text>
+            <Text style={styles.textStyle2}>{payment.takeAt.name}</Text>
+            <Text style={styles.textStyle2}>{payment.createdAt}</Text>
           </View>
           <Text style={styles.textStyle1}>Drop Off</Text>
           <View style={styles.labelText}>
-            <Text style={styles.textStyle2}>{isRent ? station.name : "Unknown"}</Text>
-            <Text style={styles.textStyle2}>{isRent ? station.name : "Unknown"}</Text>
+            <Text style={styles.textStyle2}>{payment.paidAt.name}</Text>
+            <Text style={styles.textStyle2}>{payment.updatedAt}</Text>
           </View>
           <Text style={styles.textStyle1}>Rent fee</Text>
           <View style={styles.labelText}>
@@ -71,7 +68,7 @@ const PaymentScreen = ({ navigation, route }) => {
             <Text style={styles.textTotal}>180.000VNĐ</Text>
           </View>
           <TouchableOpacity style={styles.submitButton}>
-            <Text style={{color: "#fff", fontSize: 17}}>Rent Now</Text>
+            <Text style={{ color: "#fff", fontSize: 17 }}>Rent Now</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,18 +1,50 @@
-import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
-import { AuthContext } from '../components/context'
+import axios from 'axios';
+import GlobalVariable from '../GlobalVariable';
 
 import Warnings from '../assets/images/warning.png'
+import Success from '../assets/images/checked.png'
 
-const RegisterScreen = ({navigation}) => {
+const RegisterScreen = ({ navigation }) => {
   const [nameText, setNameText] = React.useState('')
   const [emailText, setEmailText] = React.useState('')
   const [phoneText, setPhoneText] = React.useState('')
   const [passwordText, setPasswordText] = React.useState('')
   const [errorStatus, setErrorStatus] = React.useState('')
-  const { signUp } = React.useContext(AuthContext)
+  const [registerStatus, setRegisterStatus] = React.useState(false)
 
-  const handleRegister = () => {
+  const signUp = async (name, email, phone, password) => {
+    // create user with axios
+    try {
+      const res = await axios.post(`${GlobalVariable.WEB_SERVER_URL}/api/users/`,
+        {
+          name: name,
+          password: password,
+          email: email,
+          phone: phone
+        }, {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      })
+
+      if (res.status == 201) {
+        setRegisterStatus(true)
+      } else {
+        setErrorStatus(res.data.message)
+      }
+    }
+    catch (err) {
+      console.log(err)
+      setErrorStatus("Something wrong, please try again later.")
+    }
+  }
+
+  const handleRegister = async () => {
+    setErrorStatus("")
+    setRegisterStatus(false)
     let errorMessage = []
     if (nameText.length < 6 && nameText.length > 30) {
       errorMessage.push('Name length must be more than 6 and less than 30 characters')
@@ -33,9 +65,7 @@ const RegisterScreen = ({navigation}) => {
       errorMessage.push('Password contains at least 1 digit, 1 lowercase, 1 uppercase')
     }
     if (errorMessage.length === 0) {
-      setErrorStatus(false)
-      const response = signUp(nameText, emailText, phoneText, passwordText)
-      setErrorStatus(response)
+      signUp(nameText, emailText, phoneText, passwordText)
     } else {
       setErrorStatus(errorMessage[0])
     }
@@ -47,8 +77,14 @@ const RegisterScreen = ({navigation}) => {
       <View style={styles.alertValidate}>
         {
           errorStatus ? <View style={styles.alertZone}>
-            <Image source={Warnings} style={{width: 20, height: 20}}/>
+            <Image source={Warnings} style={{ width: 20, height: 20 }} />
             <Text style={styles.errorMessageStyle}>{errorStatus}</Text>
+          </View> : null
+        }
+        {
+          registerStatus ? <View style={styles.successZone}>
+            <Image source={Success} style={{ width: 20, height: 20 }} />
+            <Text style={styles.successMessageStyle}>Register successful, login now.</Text>
           </View> : null
         }
       </View>
@@ -56,7 +92,7 @@ const RegisterScreen = ({navigation}) => {
       <TextInput style={styles.textInput} keyboardType='email-address' onChangeText={value => setEmailText(value)} placeholder='Type your email' />
       <TextInput style={styles.textInput} keyboardType='phone-pad' onChangeText={value => setPhoneText(value)} placeholder='Type your phone number' />
       <TextInput style={styles.textInput} onChangeText={value => setPasswordText(value)} placeholder='Type your password' secureTextEntry />
-      <Button title='Sign up' onPress={handleRegister}/>
+      <Button title='Sign up' onPress={handleRegister} />
       <Text style={styles.register}>Already have account? <Text onPress={() => { navigation.navigate("Login") }}>Login here</Text></Text>
     </View>
   )
@@ -91,6 +127,17 @@ const styles = StyleSheet.create({
   alertZone: {
     borderWidth: 0.5,
     borderColor: "#ffd633",
+    padding: 10,
+    flexDirection: "row",
+  },
+  successMessageStyle: {
+    fontSize: 12,
+    color: "#66ff66",
+    marginLeft: 10
+  },
+  successZone: {
+    borderWidth: 0.5,
+    borderColor: "#66ff66",
     padding: 10,
     flexDirection: "row",
   },
