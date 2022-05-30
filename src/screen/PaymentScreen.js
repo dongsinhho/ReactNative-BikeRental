@@ -1,15 +1,16 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native'
 import React from 'react'
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import GlobalVariable from '../GlobalVariable';
 
 const PaymentScreen = ({ navigation, route }) => {
   const { payment } = route.params
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => <View style={styles.headerTitle}>
-        <Text style={{ fontWeight: 'bold', color: "#292970", }}>Thanh toán</Text>
+        <Text style={{ fontWeight: 'bold', color: "#292970", }}>Payment</Text>
       </View>,
       // headerTransparent: true,
       headerStyle: {
@@ -20,8 +21,49 @@ const PaymentScreen = ({ navigation, route }) => {
     });
   }, [navigation])
 
-  const submitButton = () => {
-    
+  const submitButton = async() => {
+    try {
+      const token = await AsyncStorage.getItem('token')
+      const res = await axios.get(`${GlobalVariable.WEB_SERVER_URL}/api/payments/cash`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        validateStatus: function (status) {
+          return status >= 200 && status < 500;
+        }
+      })
+      console.log("456")
+      if (res.status == 200) {
+        Alert.alert("Notification", "Payment success \nFinish now!", [
+          { text: "OK", style: "default", onPress: () => {navigation.navigate("Home")}}
+        ])
+      } else {
+        Alert.alert("Notification", "Thanh toán thất bại")
+      }
+    } catch (error) {
+      console.log(error)
+      Alert.alert("Thông báo", "Có lỗi xảy ra")
+    }
+  }
+
+  const convertDateTime = (time) => {
+    let date = new Date(time);
+    const year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    let dt = date.getDate();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+
+    if (dt < 10) {
+      dt = '0' + dt;
+    }
+    if (month < 10) {
+      month = '0' + month;
+    }
+
+    return `${hour}:${minute} ${dt}/${month}/${year}`
   }
 
   return (
@@ -35,12 +77,12 @@ const PaymentScreen = ({ navigation, route }) => {
           <Text style={styles.textStyle1}>Pick Up</Text>
           <View style={styles.labelText}>
             <Text style={styles.textStyle2}>{payment.takeAt.name}</Text>
-            <Text style={styles.textStyle2}>{payment.createdAt}</Text>
+            <Text style={styles.textStyle2}>{convertDateTime(payment.createdAt.toString())}</Text>
           </View>
           <Text style={styles.textStyle1}>Drop Off</Text>
           <View style={styles.labelText}>
             <Text style={styles.textStyle2}>{payment.paidAt.name}</Text>
-            <Text style={styles.textStyle2}>{payment.updatedAt}</Text>
+            <Text style={styles.textStyle2}>{convertDateTime(payment.updatedAt.toString())}</Text>
           </View>
           <Text style={styles.textStyle1}>Rent fee</Text>
           <View style={styles.labelText}>
@@ -67,8 +109,8 @@ const PaymentScreen = ({ navigation, route }) => {
             <Text style={styles.textTotal}>Total</Text>
             <Text style={styles.textTotal}>180.000VNĐ</Text>
           </View>
-          <TouchableOpacity style={styles.submitButton}>
-            <Text style={{ color: "#fff", fontSize: 17 }}>Rent Now</Text>
+          <TouchableOpacity style={styles.submitButton} onPress={submitButton}>
+            <Text style={{ color: "#fff", fontSize: 17 }}>Pay Now</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, Button, Image, FlatList, TouchableOpacity, ScrollView } from 'react-native'
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import React from 'react'
+import { useIsFocused } from '@react-navigation/native'
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -19,6 +20,7 @@ const HomeScreen = ({ navigation }) => {
     const { signOut } = React.useContext(AuthContext)
     const [sideBar, setSideBar] = React.useState(false);
     const [historyData, setHistoryData] = React.useState([])
+    const isFocused = useIsFocused()
     React.useEffect(async () => {
         try {
             const token = await AsyncStorage.getItem('token')
@@ -30,13 +32,17 @@ const HomeScreen = ({ navigation }) => {
                 },
             })
             if (res.data) {
-                setHistoryData(res.data ? res.data : [])
+                console.log(res.data)
+                setHistoryData(res.data)
+            }
+            else {
+                setHistoryData([])
             }
         }
         catch (err) {
             setHistoryData([])
         }
-    }, [])
+    }, [navigation, isFocused])
 
     React.useLayoutEffect(() => {
         navigation.setOptions({
@@ -54,12 +60,42 @@ const HomeScreen = ({ navigation }) => {
         });
     }, [navigation])
 
+    const handlePressHistory = (status) => {
+        if (!status) {
+            navigation.navigate("UsingBike")
+        }
+    }
+
+    const convertDateTime = (time) => {
+        let date = new Date(time);
+        const year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let dt = date.getDate();
+        const hour = date.getHours();
+        const minute = date.getMinutes();
+
+        if (dt < 10) {
+            dt = '0' + dt;
+        }
+        if (month < 10) {
+            month = '0' + month;
+        }
+
+        return `${hour}:${minute} ${dt}/${month}/${year}`
+    }
+
     const renderItem = ({ item, index }) => (
-        <View style={styles.historyList} key={index.toString()}>
-            <Text >
-                Lần {index + 1}: thuê lúc: {item.createdAt} tại {item.takeAt}, trả lúc: {item.updatedAt} tại {item.paidAt}
-            </Text>
-        </View>
+        <TouchableOpacity style={item.isCompleted ? styles.historyList : [styles.historyList, styles.historyListBackground]} key={index.toString()} onPress={() => handlePressHistory(item.isCompleted)}>
+            <View style={styles.labelText}>
+                <Text >Nhận xe: {item.takeAt ? item.takeAt.name : null}  </Text>
+                <Text>{convertDateTime(item.createdAt.toString())}</Text>
+            </View>
+            <View style={styles.labelText}>
+                <Text>Trả xe:     {item.paidAt ? item.paidAt.name : null}</Text>
+                <Text>{convertDateTime(item.updatedAt.toString())}</Text>
+            </View>
+
+        </TouchableOpacity>
     )
 
     return (
@@ -106,11 +142,12 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.section3}>
                 <Text style={styles.historyTitle}>Lịch sử di chuyển</Text>
                 {
-                    historyData.length ?
+                    historyData.length > 0 ?
                         <FlatList
                             data={historyData}
                             renderItem={renderItem}
-                            keyExtractor={(item) => { return item._id}}
+                            keyExtractor={(item) => { return item._id }}
+                            inverted
                         />
                         :
                         <View style={styles.noneData}>
@@ -228,11 +265,9 @@ const styles = StyleSheet.create({
     },
     historyList: {
         backgroundColor: '#f0f0f0',
-        padding: 20,
-        marginVertical: 6,
-        marginHorizontal: 12,
+        padding: 10,
+        marginVertical: 3,
         borderRadius: 4
-
     },
     noneData: {
         alignSelf: "center",
@@ -271,5 +306,13 @@ const styles = StyleSheet.create({
         width: "100%",
         paddingVertical: 15,
         alignItems: "center"
+    },
+    labelText: {
+        flexDirection: "row",
+        alignItems: "stretch",
+        justifyContent: "space-between",
+    },
+    historyListBackground: {
+        backgroundColor: "#ffc2b3"
     }
 });

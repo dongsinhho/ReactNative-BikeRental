@@ -39,12 +39,17 @@ const requestLocationPermission = async () => {
 }
 const MapScreen = ({ navigation }) => {
 
-  React.useLayoutEffect(async() => {
+  React.useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: "",
       headerTransparent: true,
     })
+  }, [navigation])
 
+  const [station, setStation] = React.useState([])
+  const [bottomSheetData, setBottomSheetData] = React.useState(station)
+
+  React.useEffect(async () => {
     try {
       const token = await AsyncStorage.getItem('token')
       const res = await axios.get(`${GlobalVariable.WEB_SERVER_URL}/api/stations/user/`, {
@@ -58,8 +63,8 @@ const MapScreen = ({ navigation }) => {
         }
       })
       if (res.data) {
-        setStation(res.data ? res.data : [])
-        setBottomSheetData(station)
+        setStation(res.data)
+        setBottomSheetData(res.data)
       } else {
         setStation([])
       }
@@ -68,16 +73,7 @@ const MapScreen = ({ navigation }) => {
       setStation([])
       Alert.alert("Có lỗi xảy ra", "Không thể lấy thông tin trạm")
     }
-  }, [navigation])
-
-  const [station, setStation] = React.useState([])
-  const [bottomSheetData, setBottomSheetData] = React.useState(station)
-
-  // React.useEffect(async () => {
-
-  // }, [])
-
-  console.log(bottomSheetData)
+  }, [])
 
   const handleRentBike = () => {
     bottomSheetData.status ?
@@ -161,7 +157,6 @@ const MapScreen = ({ navigation }) => {
     </View >
   )
 
-
   const sheetRef = React.useRef();
   // const fall = new Animated.Value(1)
 
@@ -198,7 +193,7 @@ const MapScreen = ({ navigation }) => {
           <Marker
             style={styles.iconStation}
             key={index}
-            coordinate={{ latitude: parseFloat(marker.latitude.$numberDecimal), longitude:  parseFloat(marker.longitude.$numberDecimal) }}
+            coordinate={{ latitude: parseFloat(marker.latitude.$numberDecimal), longitude: parseFloat(marker.longitude.$numberDecimal) }}
             title={marker.name}
             icon={marker.status ? stationActiveIcon : stationIcon}
           >
