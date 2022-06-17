@@ -32,7 +32,6 @@ const HomeScreen = ({ navigation }) => {
                 },
             })
             if (res.data) {
-                console.log(res.data)
                 setHistoryData(res.data)
             }
             else {

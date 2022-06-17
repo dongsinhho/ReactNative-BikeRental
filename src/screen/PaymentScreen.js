@@ -34,7 +34,6 @@ const PaymentScreen = ({ navigation, route }) => {
           return status >= 200 && status < 500;
         }
       })
-      console.log("456")
       if (res.status == 200) {
         Alert.alert("Notification", "Payment success \nFinish now!", [
           { text: "OK", style: "default", onPress: () => {navigation.navigate("Home")}}
@@ -43,7 +42,6 @@ const PaymentScreen = ({ navigation, route }) => {
         Alert.alert("Notification", "Thanh toán thất bại")
       }
     } catch (error) {
-      console.log(error)
       Alert.alert("Thông báo", "Có lỗi xảy ra")
     }
   }

@@ -3,13 +3,16 @@ import React from 'react'
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import GlobalVariable from '../GlobalVariable';
 
 const UserInfoScreen = ({ navigation }) => {
     const [modified, setModified] = React.useState(false)
     const [buttonName, setButtonName] = React.useState("Chỉnh sửa")
+    const [userInfo, setUserInfo] = React.useState(null)
     const inputName = React.useRef(null)
     const inputEmail = React.useRef(null)
     const inputPass = React.useRef(null)
+
     React.useLayoutEffect(() => {
         navigation.setOptions({
             headerStyle: {
@@ -19,8 +22,34 @@ const UserInfoScreen = ({ navigation }) => {
         });
     }, [])
 
+    React.useEffect(async () => {
+        try {
+            const token = await AsyncStorage.getItem('token')
+            const res = await axios.get(`${GlobalVariable.WEB_SERVER_URL}/api/users/info`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                }
+            })
+            if (res.status == 200) {
+                setUserInfo(res.data)
+            } else {
+                setUserInfo(null)
+            }
+        } catch (error) {
+            Alert.alert("Thông báo", "Có lỗi xảy ra")
+        }
+    }, [])
     
+
     const handleModified = () => {
+        if (buttonName == "Cập nhật") {
+            console.log(inputEmail)
+        }
         setModified(!modified)
         buttonName == "Chỉnh sửa" ? setButtonName("Cập nhật") : setButtonName("Chỉnh sửa")
     }
@@ -49,7 +78,7 @@ const UserInfoScreen = ({ navigation }) => {
                             ref={inputName}
                             style={modified ? styles.inputField : styles.inputEdit}
                             editable={modified}
-                            placeholder='Ho Ngoc Dong Sinh' />
+                            placeholder={userInfo ? userInfo.name : "undefine"} />
                     </View>
                     <View style={styles.label}>
                         <Text>Email</Text>
@@ -57,7 +86,7 @@ const UserInfoScreen = ({ navigation }) => {
                             ref={inputEmail}
                             style={modified ? styles.inputField : styles.inputEdit}
                             editable={modified}
-                            placeholder='sinhvua@gmail.com' />
+                            placeholder={userInfo ? userInfo.email : "undefine"} />
                     </View>
                     <View style={styles.label}>
                         <Text>Password</Text>

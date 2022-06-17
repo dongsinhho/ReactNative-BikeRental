@@ -34,7 +34,6 @@ const UsingBikeScreen = ({ navigation }) => {
                     return status >= 200 && status < 500;
                 }
             })
-            console.log(res.status)
             if (res.status == 200) {
                 navigation.navigate("Payment", { payment: res.data })
             } else {

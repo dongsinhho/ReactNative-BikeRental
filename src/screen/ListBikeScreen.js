@@ -60,9 +60,7 @@ const ListBikeScreen = ({ navigation, route }) => {
             }
         }).then((res) => {
             setIsLoading(false)
-            console.log(res.data)
             if (res.status==200) {
-                console.log(res.data)
                 navigation.navigate("UsingBike")
             } else {
                 Alert.alert("Không thành công", res.data.message)
